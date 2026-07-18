@@ -1,0 +1,47 @@
+name: Autonomous AI Daily Paper Trade
+
+on:
+  schedule:
+    # Runs at 13:15 UTC (9:15 AM Eastern Time) every Monday through Friday
+    - cron: '15 13 * * 1-5'
+  workflow_dispatch: # Allows manual trigger testing from GitHub UI
+
+jobs:
+  execute_trade:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install Quant Dependencies
+        run: pip install -r requirements.txt
+      - name: Run Automated Trading Execution Script
+        env:
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_SECRET_KEY: ${{ secrets.ALPACA_SECRET_KEY }}
+        run: |
+          python -c "
+          import os
+          from src.data_loader import fetch_live_stock_data
+          from src.feature_engineer import build_features
+          from src.model_trainer import train_quantitative_models
+          from src.paper_trader import AlpacaPaperTrader
+
+          ticker = 'NVDA'
+          print(f'Starting automated execution for {ticker}...')
+          df = fetch_live_stock_data(ticker, years=3)
+          X, y, close, _ = build_features(df)
+          bundle = train_quantitative_models(X, y, close)
+          
+          model = bundle['models']['Random Forest']
+          latest_features = X.iloc[[-1]]
+          pred_close = model.predict(latest_features)[0]
+          curr_close = close.iloc[-1]
+          
+          trader = AlpacaPaperTrader(os.getenv('ALPACA_API_KEY'), os.getenv('ALPACA_SECRET_KEY'))
+          result = trader.execute_ai_signal(ticker, curr_close, pred_close, notional_amount=2500.0)
+          print('Execution Result:', result)
+          "

@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  backend-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+    networks:
+      - real-estate-net
+
+  frontend-ui:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "8501:8501"
+    environment:
+      # Tells Streamlit to communicate with the 'backend-api' container service name
+      - API_URL=http://backend-api:8000/predict
+    depends_on:
+      - backend-api
+    networks:
+      - real-estate-net
+
+networks:
+  real-estate-net:
+    driver: bridge

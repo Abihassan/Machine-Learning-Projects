@@ -1,0 +1,16 @@
+2026-07-15 22:39:49,024 - ERROR - HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: TESLA"}}}
+2026-07-15 22:39:49,272 - ERROR - $TESLA: possibly delisted; no timezone found
+2026-07-15 22:39:49,282 - ERROR - 
+1 Failed download:
+2026-07-15 22:39:49,282 - ERROR - ['TESLA']: possibly delisted; no timezone found
+2026-07-15 22:44:27,756 - ERROR - HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: TESLA"}}}
+2026-07-15 22:44:28,047 - ERROR - $TESLA: possibly delisted; no timezone found
+2026-07-15 22:44:28,057 - ERROR - 
+1 Failed download:
+2026-07-15 22:44:28,057 - ERROR - ['TESLA']: possibly delisted; no timezone found
+2026-07-15 22:45:11,886 - ERROR - 
+1 Failed download:
+2026-07-15 22:45:11,886 - ERROR - ['NVDA']: ValueError("Unable to parse input dt Ellipsis of type <class 'ellipsis'>")
+2026-07-15 22:45:15,469 - ERROR - 
+1 Failed download:
+2026-07-15 22:45:15,469 - ERROR - ['NVDA']: ValueError("Unable to parse input dt Ellipsis of type <class 'ellipsis'>")

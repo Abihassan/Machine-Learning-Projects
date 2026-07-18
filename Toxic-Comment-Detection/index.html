@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toxicity Filter Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8 font-sans">
+
+    <div class="max-w-4xl mx-auto space-y-8">
+        
+        <!-- Header -->
+        <div class="text-center">
+            <h1 class="text-3xl font-bold text-gray-800">Online Comment Toxicity Filter</h1>
+            <p class="text-gray-500 mt-2">Powered by FastAPI & Hugging Face</p>
+        </div>
+
+        <!-- User Submission Box -->
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-semibold mb-4 text-gray-700">Submit a Comment</h2>
+            <textarea id="commentText" class="w-full border border-gray-300 p-3 rounded focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3" placeholder="Type a friendly (or toxic) comment here..."></textarea>
+            <button onclick="submitComment()" class="mt-4 bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition">Post Comment</button>
+            <p id="feedback" class="mt-2 text-sm font-semibold"></p>
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-semibold mb-4 text-gray-700">Admin Dashboard: Moderation Queue</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white border border-gray-200">
+                    <thead>
+                        <tr class="bg-gray-50 border-b">
+                            <th class="py-2 px-4 text-left text-sm font-medium text-gray-600">ID</th>
+                            <th class="py-2 px-4 text-left text-sm font-medium text-gray-600">Comment</th>
+                            <th class="py-2 px-4 text-left text-sm font-medium text-gray-600">Toxicity Score</th>
+                            <th class="py-2 px-4 text-left text-sm font-medium text-gray-600">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="commentsTableBody">
+                        <!-- Comments will be injected here via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Fetch and display comments on load
+        async function loadComments() {
+            const response = await fetch('/api/comments');
+            const comments = await response.json();
+            const tableBody = document.getElementById('commentsTableBody');
+            tableBody.innerHTML = '';
+
+            comments.forEach(comment => {
+                const row = document.createElement('tr');
+                row.className = "border-b hover:bg-gray-50";
+                
+                // Formatting the score to a percentage
+                const scorePercent = (comment.score * 100).toFixed(1) + '%';
+                
+                // Styling based on flag status
+                const statusBadge = comment.is_flagged 
+                    ? `<span class="bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-0.5 rounded">Flagged (Toxic)</span>`
+                    : `<span class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded">Approved</span>`;
+
+                row.innerHTML = `
+                    <td class="py-3 px-4 text-sm text-gray-600">${comment.id}</td>
+                    <td class="py-3 px-4 text-sm text-gray-800">${comment.text}</td>
+                    <td class="py-3 px-4 text-sm text-gray-600">${scorePercent}</td>
+                    <td class="py-3 px-4 text-sm">${statusBadge}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Submit a new comment
+        async function submitComment() {
+            const textInput = document.getElementById('commentText');
+            const feedback = document.getElementById('feedback');
+            const text = textInput.value.trim();
+
+            if (!text) return;
+
+            feedback.className = "mt-2 text-sm text-gray-500";
+            feedback.innerText = "Analyzing comment...";
+
+            const response = await fetch('/api/comments', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text })
+            });
+
+            const result = await response.json();
+            
+            if (result.is_flagged) {
+                feedback.className = "mt-2 text-sm font-semibold text-red-600";
+                feedback.innerText = "Comment blocked! It violates our community guidelines.";
+            } else {
+                feedback.className = "mt-2 text-sm font-semibold text-green-600";
+                feedback.innerText = "Comment posted successfully!";
+            }
+
+            textInput.value = ''; // Clear input
+            loadComments();       // Refresh table
+        }
+
+        // Initial load
+        loadComments();
+    </script>
+</body>
+</html>

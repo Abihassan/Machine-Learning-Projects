@@ -1,0 +1,12 @@
+SpeechRecognition==3.10.4
+deep-translator==1.11.4
+edge-tts==6.1.12
+pygame==2.6.0
+pyaudio==0.2.14
+faster-whisper==1.0.3
+ollama==0.4.7
+pyttsx3==2.90
+numpy
+ultralytics==8.1.0
+opencv-python-headless==4.9.0.80
+numpy==1.26.4

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Yoga Pose Corrector</title>
+    <!-- Tailwind CSS for UI -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- MediaPipe ML & Camera Utilities -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+</head>
+<body class="bg-slate-900 text-white min-h-screen font-sans flex flex-col items-center py-10">
+
+    <div class="max-w-4xl w-full px-4">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-emerald-400 mb-2">Virtual Yoga Corrector</h1>
+            <p class="text-slate-400">Real-time ML alignment feedback using skeletal tracking</p>
+        </header>
+
+        <div class="flex flex-col md:flex-row gap-6 mb-6">
+            <!-- Controls Panel -->
+            <div class="bg-slate-800 p-6 rounded-xl flex-1 border border-slate-700 shadow-xl">
+                <h2 class="text-xl font-semibold mb-4 text-emerald-300">Settings & Feedback</h2>
+                
+                <label class="block text-sm font-medium text-slate-300 mb-2">Select Target Pose:</label>
+                <select id="pose-select" class="w-full bg-slate-700 text-white border border-slate-600 rounded p-2 mb-6 focus:outline-none focus:border-emerald-400">
+                    <option value="warrior2">Warrior II</option>
+                    <option value="tree">Tree Pose</option>
+                </select>
+
+                <div class="bg-slate-900 p-4 rounded-lg border border-slate-700">
+                    <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Live AI Feedback</h3>
+                    <p id="status-text" class="text-lg font-medium text-amber-400">Initializing camera and ML model...</p>
+                </div>
+            </div>
+
+            <!-- Video & Canvas Container -->
+            <div class="relative bg-black rounded-xl overflow-hidden shadow-2xl border-2 border-slate-700 w-full md:w-[640px] h-[480px]">
+                <video id="webcam" class="absolute top-0 left-0 w-full h-full object-cover" autoplay playsinline></video>
+                <canvas id="output_canvas" class="absolute top-0 left-0 w-full h-full object-cover"></canvas>
+                
+                <!-- Loading Overlay -->
+                <div id="loading" class="absolute inset-0 bg-slate-900/80 flex items-center justify-center z-10">
+                    <span class="text-emerald-400 font-semibold animate-pulse">Loading MediaPipe Models...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const videoElement = document.getElementById('webcam');
+        const canvasElement = document.getElementById('output_canvas');
+        const canvasCtx = canvasElement.getContext('2d');
+        const statusText = document.getElementById('status-text');
+        const poseSelect = document.getElementById('pose-select');
+        const loadingElement = document.getElementById('loading');
+
+        // Set canvas dimensions to match standard webcam resolution
+        canvasElement.width = 640;
+        canvasElement.height = 480;
+
+        // Mathematical function to calculate the angle between three landmarks
+        function calculateAngle(a, b, c) {
+            const radians = Math.atan2(c.y - b.y, c.x - b.x) - Math.atan2(a.y - b.y, a.x - b.x);
+            let angle = Math.abs(radians * 180.0 / Math.PI);
+            if (angle > 180.0) {
+                angle = 360.0 - angle;
+            }
+            return angle;
+        }
+
+        // Logic to evaluate specific Yoga Poses
+        function evaluatePose(landmarks) {
+            const currentPose = poseSelect.value;
+            
+            // Extract necessary landmarks (MediaPipe index mapping)
+            const leftShoulder = landmarks[11];
+            const rightShoulder = landmarks[12];
+            const leftElbow = landmarks[13];
+            const rightElbow = landmarks[14];
+            const leftHip = landmarks[23];
+            const rightHip = landmarks[24];
+            const leftKnee = landmarks[25];
+            const rightKnee = landmarks[26];
+            const leftAnkle = landmarks[27];
+            const rightAnkle = landmarks[28];
+
+            if (currentPose === 'warrior2') {
+                // Calculate angles
+                const leftKneeAngle = calculateAngle(leftHip, leftKnee, leftAnkle);
+                const rightKneeAngle = calculateAngle(rightHip, rightKnee, rightAnkle);
+                const leftArmAngle = calculateAngle(leftHip, leftShoulder, leftElbow);
+                const rightArmAngle = calculateAngle(rightHip, rightShoulder, rightElbow);
+
+                // Check which knee is bent (front leg)
+                const isLeftLegFront = leftKneeAngle < 130;
+                const frontKneeAngle = isLeftLegFront ? leftKneeAngle : rightKneeAngle;
+                
+                let feedback = [];
+                let isPerfect = true;
+
+                if (frontKneeAngle > 110) {
+                    feedback.push("Bend your front knee more (aim for 90°)");
+                    isPerfect = false;
+                } else if (frontKneeAngle < 75) {
+                    feedback.push("Front knee is bent too much");
+                    isPerfect = false;
+                }
+
+                if (leftArmAngle < 75 || leftArmAngle > 105 || rightArmAngle < 75 || rightArmAngle > 105) {
+                    feedback.push("Keep both arms parallel to the floor");
+                    isPerfect = false;
+                }
+
+                if (isPerfect) {
+                    statusText.innerText = "Perfect Warrior II! Hold it.";
+                    statusText.className = "text-lg font-medium text-emerald-400";
+                } else {
+                    statusText.innerText = feedback.join(" | ");
+                    statusText.className = "text-lg font-medium text-red-400";
+                }
+
+            } else if (currentPose === 'tree') {
+                const leftKneeAngle = calculateAngle(leftHip, leftKnee, leftAnkle);
+                const rightKneeAngle = calculateAngle(rightHip, rightKnee, rightAnkle);
+                
+                let feedback = [];
+                let isPerfect = true;
+
+                // Determine standing vs bent leg
+                if (leftKneeAngle < 140 && rightKneeAngle > 160) {
+                    // Right leg is standing, Left is bent
+                } else if (rightKneeAngle < 140 && leftKneeAngle > 160) {
+                    // Left leg is standing, Right is bent
+                } else {
+                    feedback.push("Lift one foot and place it on the opposite inner thigh");
+                    isPerfect = false;
+                }
+
+                if (isPerfect) {
+                    statusText.innerText = "Great Tree Pose! Find your balance.";
+                    statusText.className = "text-lg font-medium text-emerald-400";
+                } else {
+                    statusText.innerText = feedback.join(" | ");
+                    statusText.className = "text-lg font-medium text-amber-400";
+                }
+            }
+        }
+
+        // Handle MediaPipe Results
+        function onResults(results) {
+            // Hide loading screen once we get the first frame
+            if (loadingElement.style.display !== 'none') {
+                loadingElement.style.display = 'none';
+                statusText.innerText = "Step back so your full body is visible.";
+            }
+
+            canvasCtx.save();
+            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+            
+            // Draw the webcam frame
+            canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+
+            // Draw Skeleton
+            if (results.poseLandmarks) {
+                // Evaluate the pose and update UI
+                evaluatePose(results.poseLandmarks);
+
+                // Draw landmarks and connections
+                drawConnectors(canvasCtx, results.poseLandmarks, POSE_CONNECTIONS,
+                            {color: '#10b981', lineWidth: 4}); // Emerald green connections
+                drawLandmarks(canvasCtx, results.poseLandmarks,
+                            {color: '#34d399', lineWidth: 2, radius: 4}); 
+            } else {
+                statusText.innerText = "No body detected. Step into the frame.";
+                statusText.className = "text-lg font-medium text-slate-400";
+            }
+            canvasCtx.restore();
+        }
+
+        // Initialize MediaPipe Pose
+        const pose = new Pose({locateFile: (file) => {
+            return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
+        }});
+
+        pose.setOptions({
+            modelComplexity: 1, // 0 = Fast/Lite, 1 = Full, 2 = Heavy
+            smoothLandmarks: true,
+            enableSegmentation: false,
+            minDetectionConfidence: 0.5,
+            minTrackingConfidence: 0.5
+        });
+        pose.onResults(onResults);
+
+        // Initialize WebCam
+        const camera = new Camera(videoElement, {
+            onFrame: async () => {
+                await pose.send({image: videoElement});
+            },
+            width: 640,
+            height: 480
+        });
+        
+        camera.start();
+    </script>
+</body>
+</html>

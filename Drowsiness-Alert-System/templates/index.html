@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Driver Drowsiness Alert System</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #00e676;
+            margin-bottom: 5px;
+        }
+        p {
+            color: #a0a0a0;
+            font-size: 1.1rem;
+        }
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+        }
+        button {
+            padding: 10px 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-start { background-color: #00e676; color: #000; }
+        .btn-start:hover { background-color: #00c853; }
+        .btn-stop { background-color: #ff5252; color: #fff; }
+        .btn-stop:hover { background-color: #d50000; }
+        .video-container {
+            background-color: #1e1e1e;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+            border: 2px solid #333;
+            width: 640px;
+            height: 480px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .video-container span {
+            color: #00e676; /* Changed to green to indicate loading */
+            font-size: 1.2rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+        img {
+            border-radius: 8px;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Drowsiness Detection Monitor</h1>
+        <p>Real-time AI Vision Assistant</p>
+    </div>
+
+    <div class="controls">
+        <button class="btn-start" onclick="startSystem()">▶ Turn On</button>
+        <button class="btn-stop" onclick="stopSystem()">■ Turn Off</button>
+    </div>
+
+    <div class="video-container">
+        <span id="placeholder-text">SYSTEM OFFLINE</span>
+        <img id="video-stream" src="" alt="Video Stream">
+    </div>
+
+    <script>
+        const videoStream = document.getElementById('video-stream');
+        const placeholderText = document.getElementById('placeholder-text');
+
+        // This triggers the moment the first video frame arrives from FastAPI
+        videoStream.onload = function() {
+            placeholderText.style.display = 'none';
+            videoStream.style.display = 'block';
+        };
+
+        function startSystem() {
+            // Update UI to show loading state
+            videoStream.style.display = 'none';
+            placeholderText.style.display = 'block';
+            placeholderText.style.color = '#00e676';
+            placeholderText.innerText = "INITIALIZING CAMERA...";
+
+            // Request the video feed
+            videoStream.src = '/video_feed?' + new Date().getTime();
+        }
+
+        function stopSystem() {
+            // 1. Tell the backend to force-kill the OpenCV loop immediately
+            fetch('/stop', { method: 'POST' }).then(() => {
+                // 2. Clear the image source to drop the frontend connection
+                videoStream.src = '';
+                
+                // 3. Reset the UI
+                videoStream.style.display = 'none';
+                placeholderText.style.display = 'block';
+                placeholderText.style.color = '#555';
+                placeholderText.innerText = "SYSTEM OFFLINE";
+            });
+        }
+    </script>
+
+</body>
+</html>
