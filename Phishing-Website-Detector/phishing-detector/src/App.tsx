@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Shield, ShieldAlert, Activity, Search, AlertTriangle, Code } from 'lucide-react';
 import { analyzeUrl } from './api/mockApi';
-import { AnalysisResult } from './api/types';
+import type { AnalysisResult } from './api/types';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 
 function App() {
