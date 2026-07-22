@@ -18,14 +18,18 @@ while deepfakes exhibit high probability spikes or consistent artifacting.
 uploaded_file = st.file_uploader("Upload a video (.mp4, .avi, .mov)", type=["mp4", "avi", "mov"])
 
 if uploaded_file is not None:
+    # 1. Save uploaded file to a temporary file
     tfile = tempfile.NamedTemporaryFile(delete=False, suffix='.mp4')
     tfile.write(uploaded_file.read())
+    tfile.close()  # CLOSE THE FILE to release the Windows write lock
+    
     video_path = tfile.name
     
     col1, col2 = st.columns(2)
     
     with col1:
-        st.video(video_path)
+        # Pass the uploaded_file directly to st.video to prevent it from locking the temp file
+        st.video(uploaded_file)
     
     with col2:
         st.write("### Analysis Progress")
@@ -57,4 +61,10 @@ if uploaded_file is not None:
             
             st.info("💡 **How to read the graph:** Peaks above the dotted threshold line indicate specific frames in the video where the AI detected deepfake artifacts. A jagged, spiky line indicates temporal inconsistency.")
 
-    os.remove(video_path)
+    # 3. Safely clean up the temp file
+    try:
+        os.remove(video_path)
+    except PermissionError:
+        # If Windows still holds the lock, just pass. 
+        # Temp files are automatically cleared by the OS periodically anyway.
+        pass

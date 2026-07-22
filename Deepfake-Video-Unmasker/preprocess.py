@@ -1,9 +1,22 @@
+import os
 import cv2
+import urllib.request
 from PIL import Image
 
-# Initialize OpenCV's built-in Haar Cascade Face Detector
-# This comes pre-packaged with opencv-python, so no extra downloads are needed.
-face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+# 1. Define the local path for the cascade file
+cascade_path = "haarcascade_frontalface_default.xml"
+
+# 2. Download the cascade file from OpenCV's official repo if it doesn't exist locally
+if not os.path.exists(cascade_path):
+    url = "https://raw.githubusercontent.com/opencv/opencv/master/data/haarcascades/haarcascade_frontalface_default.xml"
+    urllib.request.urlretrieve(url, cascade_path)
+
+# 3. Initialize the Face Detector using the guaranteed local file
+face_cascade = cv2.CascadeClassifier(cascade_path)
+
+# 4. Verify it loaded correctly
+if face_cascade.empty():
+    raise IOError("Failed to load the Haar Cascade XML file. Please check your internet connection.")
 
 def extract_faces(video_path, max_frames=60):
     """
@@ -37,7 +50,7 @@ def extract_faces(video_path, max_frames=60):
             )
             
             if len(detected_faces) > 0:
-                # Grab the first face detected (assumes the primary subject)
+                # Grab the first face detected
                 x, y, w, h = detected_faces[0]
                 ih, iw, _ = frame.shape
                 
