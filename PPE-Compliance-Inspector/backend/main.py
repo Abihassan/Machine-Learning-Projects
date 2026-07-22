@@ -2,12 +2,16 @@ import cv2
 import json
 import base64
 import logging
+import os
+import csv
+from datetime import datetime
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from ultralytics import YOLO
 import uvicorn
+from huggingface_hub import hf_hub_download
 
-# Initialize FastAPI
 app = FastAPI()
 
 app.add_middleware(
@@ -17,120 +21,123 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("PPE-Inspector")
+# Setup directories for logging
+os.makedirs("static/violations", exist_ok=True)
+CSV_FILE = "violations.csv"
 
-# 1. Load Pre-trained Open-Source YOLOv8 Model directly from Hugging Face Hub
-logger.info("Downloading/Loading YOLOv8 weights from Hugging Face...")
+if not os.path.exists(CSV_FILE):
+    with open(CSV_FILE, mode='w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(["Timestamp", "Violation", "Image_Path"])
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("Helmet-Inspector")
+
+# 1. Download and Load model explicitly to avoid Windows path errors
 try:
-    model = YOLO("hf://Hansung-Cho/yolov8-ppe-detection/best.pt")
+    logger.info("Downloading Helmet Detection weights explicitly via huggingface_hub...")
+    # This downloads the file safely and returns a valid local Windows path
+    model_path = hf_hub_download(repo_id="sharathhhhh/safetyHelmet-detection-yolov8", filename="best.pt")
+    
+    # Load the model using the local path
+    model = YOLO(model_path)
+    
 except Exception as e:
     logger.error(f"Failed to load model: {e}")
-    raise e
+    model = YOLO("yolov8n.pt") # Fallback
 
-# 2. Dynamically map class IDs from the pre-trained model metadata
+# --- DEBUG PRINT ---
+print("\n" + "="*50)
+print(f"DEBUG - ACTUAL MODEL CLASSES: {model.names}")
+print("="*50 + "\n")
+
+# 2. Dynamically map the specific helmet classes
 class_names = model.names
-person_ids = [k for k, v in class_names.items() if "person" in v.lower() or "worker" in v.lower()]
-helmet_ids = [k for k, v in class_names.items() if "helmet" in v.lower() or "hardhat" in v.lower() or "hard hat" in v.lower()]
-vest_ids = [k for k, v in class_names.items() if "vest" in v.lower()]
+helmet_ids = [k for k, v in class_names.items() if "with" in v.lower() and "out" not in v.lower()]
+no_helmet_ids = [k for k, v in class_names.items() if "without" in v.lower() or "no" in v.lower()]
 
-logger.info(f"Mapped IDs - Person: {person_ids}, Helmet: {helmet_ids}, Vest: {vest_ids}")
+# Fallback mapping if metadata is non-standard
+if not helmet_ids and not no_helmet_ids:
+    helmet_ids, no_helmet_ids = [0], [1]
+    
+last_logged_time = datetime.min
+LOG_COOLDOWN = 3 # Wait 3 seconds between logging the same violation
 
-def calculate_iou(box1, box2):
-    """Calculates Intersection over Union for spatial overlap mapping."""
-    x1, y1, w1, h1 = box1
-    x2, y2, w2, h2 = box2
+def log_violation(frame, label):
+    """Saves a snapshot and writes to CSV when a missing helmet is detected."""
+    global last_logged_time
+    now = datetime.now()
     
-    xi1 = max(x1, x2)
-    yi1 = max(y1, y2)
-    xi2 = min(x1 + w1, x2 + w2)
-    yi2 = min(y1 + h1, y2 + h2)
-    
-    inter_area = max(0, xi2 - xi1) * max(0, yi2 - yi1)
-    box1_area = w1 * h1
-    box2_area = w2 * h2
-    union_area = box1_area + box2_area - inter_area
-    
-    return inter_area / union_area if union_area > 0 else 0
+    if (now - last_logged_time).total_seconds() < LOG_COOLDOWN:
+        return None
 
-def process_frame(frame, violation_logs):
-    """Runs inference and applies IoU compliance logic."""
-    results = model.predict(frame, conf=0.5, verbose=False)
+    last_logged_time = now
+    timestamp_str = now.strftime("%Y%m%d_%H%M%S")
+    img_filename = f"static/violations/violation_{timestamp_str}.jpg"
     
-    persons, helmets, vests = [], [], []
+    cv2.imwrite(img_filename, frame)
     
-    # Extract bounding boxes and categorize
+    with open(CSV_FILE, mode='a', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow([now.strftime("%Y-%m-%d %H:%M:%S"), label, img_filename])
+        
+    return img_filename
+
+def process_frame(frame):
+    """Runs direct inference for helmets and draws bounding boxes."""
+    results = model.predict(frame, conf=0.25, verbose=False)
+    violation_logs = []
+
     for r in results:
+        # --- DEBUG PRINT ---
+        if len(r.boxes) > 0:
+            print(f"Detected {len(r.boxes)} objects in this frame.")
+            
         for box in r.boxes:
             x1, y1, x2, y2 = map(int, box.xyxy[0])
-            w, h = x2 - x1, y2 - y1
             cls = int(box.cls[0])
+            conf = float(box.conf[0])
             
-            item = {"box": (x1, y1, w, h), "xyxy": (x1, y1, x2, y2)}
+            print(f"Detected Class ID: {cls} with Confidence: {conf:.2f}")
             
-            if cls in person_ids: persons.append(item)
-            elif cls in helmet_ids: helmets.append(item)
-            elif cls in vest_ids: vests.append(item)
-            
-    # Apply logic for each detected person
-    for person in persons:
-        has_helmet = False
-        has_vest = False
-        px1, py1, px2, py2 = person["xyxy"]
-        
-        # Check IoU overlap to associate PPE with the specific person
-        for helmet in helmets:
-            if calculate_iou(person["box"], helmet["box"]) > 0.1 or (helmet["xyxy"][0] >= px1 and helmet["xyxy"][2] <= px2 and helmet["xyxy"][1] <= py2):
-                has_helmet = True
+            if cls in helmet_ids:
+                color = (0, 255, 0)
+                label = f"Helmet OK {conf:.2f}"
+                cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
+                cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
                 
-        for vest in vests:
-            if calculate_iou(person["box"], vest["box"]) > 0.1 or (vest["xyxy"][0] >= px1 and vest["xyxy"][2] <= px2 and vest["xyxy"][1] <= py2):
-                has_vest = True
-                
-        compliant = has_helmet and has_vest
-        color = (0, 255, 0) if compliant else (0, 0, 255)
-        
-        # Draw Output Bounding Boxes
-        cv2.rectangle(frame, (px1, py1), (px2, py2), color, 2)
-        
-        label = "Compliant" if compliant else "Violation:"
-        if not has_helmet: label += " No Helmet"
-        if not has_vest: label += " No Vest"
-        
-        cv2.putText(frame, label, (px1, py1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
-        
-        if not compliant:
-            violation_logs.append({"label": label, "box": (px1, py1, px2, py2)})
+            elif cls in no_helmet_ids:
+                color = (0, 0, 255)
+                label = f"Violation {conf:.2f}"
+                cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
+                cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+
+                # Trigger logging
+                img_path = log_violation(frame, label)
+                if img_path:
+                    violation_logs.append({"label": label, "snapshot": img_path})
 
     return frame, violation_logs
 
 @app.websocket("/ws/video")
 async def websocket_video_endpoint(websocket: WebSocket):
-    """Handles real-time webcam stream over WebSockets."""
     await websocket.accept()
-    cap = cv2.VideoCapture(0) # 0 for default local webcam
+    cap = cv2.VideoCapture(0)
     
     try:
         while True:
             ret, frame = cap.read()
             if not ret: break
             
-            violation_logs = []
-            processed_frame, logs = process_frame(frame, violation_logs)
-            
-            # Encode frame to Base64 for rapid WebSocket transmission
+            processed_frame, logs = process_frame(frame)
             _, buffer = cv2.imencode('.jpg', processed_frame)
             b64_img = base64.b64encode(buffer).decode('utf-8')
             
-            data = {
-                "frame": b64_img,
-                "logs": logs
-            }
-            await websocket.send_text(json.dumps(data))
+            await websocket.send_text(json.dumps({"frame": b64_img, "logs": logs}))
     except WebSocketDisconnect:
-        logger.info("Client disconnected from WebSocket.")
-    except Exception as e:
-        logger.error(f"WebSocket streaming error: {e}")
+        logger.info("Client disconnected")
     finally:
         cap.release()
 
