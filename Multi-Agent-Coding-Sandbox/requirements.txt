@@ -1,0 +1,15 @@
+# --- Multi-Agent Orchestration ---
+crewai==1.10.1
+crewai-tools==1.10.1
+
+# --- Local LLM Access ---
+litellm==1.53.1
+
+# --- Sandbox Execution ---
+docker==7.1.0
+
+# --- Utilities ---
+python-dotenv==1.0.1
+pydantic>=2.11.9,<2.13
+tenacity==9.0.0
+rich==13.9.4
