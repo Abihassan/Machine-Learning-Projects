@@ -1,0 +1,14 @@
+# Core ML
+torch>=2.2
+numpy>=1.26
+
+# Game logic
+python-chess>=1.11
+
+# Backend (added in Phase 5)
+fastapi>=0.110
+uvicorn[standard]>=0.29
+pydantic>=2.6
+
+# Training utilities
+tqdm>=4.66

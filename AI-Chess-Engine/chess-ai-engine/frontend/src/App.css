@@ -1,0 +1,121 @@
+.app {
+  min-height: 100vh;
+  background: #14161a;
+  color: #e8e8e8;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.header {
+  max-width: 900px;
+  margin: 0 auto 24px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.header h1 {
+  font-size: 1.5rem;
+  margin: 0;
+  font-weight: 600;
+}
+
+.backend-status {
+  font-size: 0.85rem;
+  margin: 0;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.backend-status.online {
+  background: rgba(70, 200, 130, 0.15);
+  color: #55d68c;
+}
+
+.backend-status.offline {
+  background: rgba(220, 90, 90, 0.15);
+  color: #e57373;
+}
+
+.main {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  gap: 32px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.board-container {
+  width: 480px;
+  max-width: 100%;
+}
+
+.sidebar {
+  flex: 1;
+  min-width: 240px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.status-card,
+.history-card {
+  background: #1e2126;
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.status-message {
+  margin: 0 0 8px;
+  font-weight: 500;
+}
+
+.eval {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #b7b7b7;
+}
+
+.eval-hint {
+  font-size: 0.75rem;
+  color: #8a8a8a;
+}
+
+.error {
+  margin: 8px 0 0;
+  color: #e57373;
+  font-size: 0.85rem;
+}
+
+.history-card h2 {
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #9a9a9a;
+  margin: 0 0 12px;
+}
+
+.move-list {
+  margin: 0;
+  padding-left: 20px;
+  max-height: 320px;
+  overflow-y: auto;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.reset-button {
+  background: #2a2e35;
+  color: #e8e8e8;
+  border: 1px solid #3a3f47;
+  border-radius: 8px;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.reset-button:hover {
+  background: #333842;
+}
