@@ -1,0 +1,24 @@
+# Pinned against the latest release on PyPI as of 2026-07-24.
+# If `pip install` fails on a conflict, try `pip install -r requirements.txt --upgrade`
+# to let pip re-resolve rather than fighting these exact pins.
+
+# --- Web framework -----------------------------------------------------------
+fastapi
+uvicorn
+# Range, not an exact pin: langgraph-sdk (a langgraph dependency) currently
+# caps this at <16, which collides with an exact 16.x pin. Let pip pick the
+# highest version both uvicorn and langgraph-sdk agree on.
+websockets
+
+# --- HTTP + config -------------------------------------------------------------
+httpx
+pydantic
+python-dotenv
+
+# --- Agent framework + local model integration ----------------------------------
+langgraph
+langchain-core
+langchain-ollama
+
+# --- Sandbox ---------------------------------------------------------------------
+docker
