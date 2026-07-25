@@ -1,13 +1,13 @@
-fastapi==0.115.0
-uvicorn[standard]==0.30.6
-sqlalchemy==2.0.35
-pydantic==2.9.2
-pyyaml==6.0.2
-python-multipart==0.0.9
+fastapi
+uvicorn
+sqlalchemy
+pydantic
+pyyaml
+python-multipart
 
 # ML stack (heavy — install only where you have compute)
-torch==2.4.1
-scikit-learn==1.5.2
-transformers==4.44.2
-pandas==2.2.3
-numpy==1.26.4
+torch
+scikit-learn
+transformers
+pandas
+numpy
