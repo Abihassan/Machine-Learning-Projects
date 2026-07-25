@@ -1,0 +1,22 @@
+{
+  "ref": "refs/heads/main",
+  "repository": {
+    "full_name": "acme/fraud-detector"
+  },
+  "head_commit": {
+    "id": "7c3d9f1a2b4e6d8f0a1c3e5b7d9f1a2b4c6e8d0f",
+    "message": "Add updated transaction dataset for Q3",
+    "added": ["data/transactions_q3.csv"],
+    "modified": ["data/dataset.csv"],
+    "removed": []
+  },
+  "commits": [
+    {
+      "id": "7c3d9f1a2b4e6d8f0a1c3e5b7d9f1a2b4c6e8d0f",
+      "message": "Add updated transaction dataset for Q3",
+      "added": ["data/transactions_q3.csv"],
+      "modified": ["data/dataset.csv"],
+      "removed": []
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+# Lives at the root of the watched repo. The pipeline reads this to decide
+# which model to load and how to train it.
+
+model:
+  source: local              # "local" | "huggingface"
+  architecture: CustomCNN    # used when source == local
+  hf_model_id: distilbert-base-uncased  # used when source == huggingface
+
+training:
+  epochs: 5
+  batch_size: 32
+  learning_rate: 0.001
+  val_split: 0.2
+
+evaluation:
+  precision_threshold: 0.85

@@ -1,0 +1,34 @@
+# Sandbox image used ONLY to execute LLM-generated code — it intentionally
+# does NOT include this project's own backend dependencies. Think of it as a
+# minimal, disposable runtime for arbitrary generated scripts, rebuilt
+# whenever you want to expand what the Coder is allowed to import.
+#
+# Build once:
+#   docker build -t agent-sandbox:latest -f Dockerfile.sandbox .
+#
+# Rebuild whenever you add a package to the list below. The Planner is
+# instructed to only request packages that make sense for the task, but
+# nothing enforces that it stays within this exact list yet — if it asks for
+# something not installed here, the Reviewer will see a ModuleNotFoundError
+# and can react to it (though it can't install anything itself, since the
+# container has no network access at run time — see docker_executor.py).
+
+FROM python:3.11-slim
+
+# A conservative, commonly-needed set for general-purpose scripts, data
+# processing, and simple parsing/formatting tasks. Add to this list + rebuild
+# as your use cases grow.
+RUN pip install --no-cache-dir \
+    requests \
+    numpy \
+    pandas \
+    matplotlib \
+    pytest
+
+# Never run generated code as root.
+RUN useradd --create-home --uid 1000 sandbox
+USER sandbox
+WORKDIR /workspace
+
+# No CMD/ENTRYPOINT: DockerExecutor supplies the run command explicitly
+# (`python solution.py`) so this image does nothing on its own.

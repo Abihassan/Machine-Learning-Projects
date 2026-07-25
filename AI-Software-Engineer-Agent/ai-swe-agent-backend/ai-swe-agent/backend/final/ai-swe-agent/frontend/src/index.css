@@ -1,0 +1,82 @@
+@import "tailwindcss";
+@import "@fontsource/ibm-plex-sans/400.css";
+@import "@fontsource/ibm-plex-sans/500.css";
+@import "@fontsource/ibm-plex-sans/600.css";
+@import "@fontsource/ibm-plex-sans/700.css";
+@import "@fontsource/ibm-plex-mono/400.css";
+@import "@fontsource/ibm-plex-mono/500.css";
+
+@theme {
+  /* Neutrals: a graphite "workshop" surface, deliberately not pure black */
+  --color-ink: #12151b;
+  --color-surface: #1a1e27;
+  --color-surface-raised: #232838;
+  --color-line: #2e3444;
+  --color-text: #e7e9ee;
+  --color-text-dim: #8890a3;
+
+  /* One accent per agent role: peers in the loop, not a hierarchy */
+  --color-planner: #7c9cf5;
+  --color-coder: #52c5b0;
+  --color-executor: #e3a64b;
+  --color-reviewer: #e36b7a;
+
+  /* Reserved strictly for genuine success/failure states elsewhere in the UI */
+  --color-good: #4ade80;
+  --color-bad: #f2635b;
+
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --animate-fade-in: fade-in 200ms ease-out;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-ink);
+  color: var(--color-text);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-coder);
+  outline-offset: 2px;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-line);
+  border-radius: 999px;
+}
