@@ -1,6 +1,6 @@
-tensorflow
-tensorflow-hub
-librosa
+tensorflow==2.15.0 
+tensorflow-hub==0.16.1 
+librosa==0.10.1
 gradio
 scikit-learn
 matplotlib
