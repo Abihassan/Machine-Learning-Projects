@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+chromadb
+langchain
+langchain-community
+sentence-transformers
+openai-whisper
+ollama
+python-multipart
+PyPDF2
