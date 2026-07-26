@@ -1,0 +1,8 @@
+tensorflow
+tensorflow-hub
+librosa
+gradio
+scikit-learn
+matplotlib
+numpy
+noisereduce

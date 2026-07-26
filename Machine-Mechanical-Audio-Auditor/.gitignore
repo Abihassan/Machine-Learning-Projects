@@ -1,0 +1,17 @@
+# Environments
+venv/
+env/
+.env
+
+# Python Caches
+__pycache__/
+*.pyc
+
+# Data and Models
+healthy_audio_samples/
+*.pkl
+*.wav
+*.mp3
+
+# OS Files
+.DS_Store
