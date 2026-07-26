@@ -3,17 +3,17 @@ from langchain_community.document_loaders import PyMuPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
-from langchain_community.llms import Ollama
+from langchain_ollama import OllamaLLM
 from langchain_core.prompts import PromptTemplate
 
 # Configuration
 CHROMA_PATH = "./chroma_db"
 EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
-LLM_MODEL = "llama3"
+LLM_MODEL = "llama3:8b"
 
 # Initialize singletons to avoid reloading in memory
 embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
-llm = Ollama(model=LLM_MODEL)
+llm = OllamaLLM(model=LLM_MODEL)
 vector_store = Chroma(persist_directory=CHROMA_PATH, embedding_function=embeddings)
 
 def process_and_ingest_pdf(file_path: str, filename: str):
