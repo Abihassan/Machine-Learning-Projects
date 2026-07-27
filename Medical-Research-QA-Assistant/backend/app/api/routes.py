@@ -11,18 +11,25 @@ async def ask_medical_question(request: QueryRequest):
     try:
         # 1. Fetch live data from PubMed based on the question keywords
         # Note: In a production app, you might want a separate keyword extraction step
+        print(f"\n--- New Query: {request.question} ---")
+        
+        print("1. Fetching papers from PubMed...")
         papers = PubMedService.fetch_papers(request.question, max_results=request.max_papers)
         
         if not papers:
             raise HTTPException(status_code=404, detail="No relevant medical papers found on PubMed.")
 
         # 2. Index the fetched papers locally
+        print(f"2. Found {len(papers)} papers. Indexing into ChromaDB...")
         vectorstore = rag_service.process_and_index_papers(papers)
 
         # 3. Perform RAG to get the answer
+        print("3. Indexing complete! Sending to local LLM (Ollama) for generation...")
+        print("   (Note: If this step takes a long time, it is due to local CPU processing)")
         rag_result = rag_service.generate_answer(request.question, vectorstore)
         
         # 4. Format sources for the frontend
+        print("4. Answer successfully generated!")
         source_docs = rag_result.get("source_documents", [])
         sources = []
         seen_pmids = set()
