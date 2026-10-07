@@ -1,7 +1,3 @@
-Absolutely — here is a **complete, polished GitHub-ready README** specifically for your Chess AI Engine. It is designed to look like a serious software/ML project rather than a basic documentation file.
-
-:::writing{variant="document" id="74163" title="README.md"} \<div align="center"\>
-
 # ♟️ Chess AI Engine
 
 ### AlphaZero-Style Self-Play Reinforcement Learning
