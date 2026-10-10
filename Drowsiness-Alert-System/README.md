@@ -147,14 +147,4 @@ Important: Never rely on this application as the sole means of preventing drowsy
 - Improve dashboard visualizations and accessibility.
 - Evaluate detection performance under different lighting and camera conditions.
 
-👨‍💻 Author
-
-Abihassan K
-
-- GitHub: "@Abihassan" (https://github.com/Abihassan)
-- LinkedIn: "Abihassan K" (https://www.linkedin.com/in/abihassan-k-b8196727a/)
-- Portfolio: "Personal Portfolio" (https://abihassan-k-portfolio.vercel.app/)
-
----
-
 ⭐ If you find this project interesting, consider giving the repository a star!
