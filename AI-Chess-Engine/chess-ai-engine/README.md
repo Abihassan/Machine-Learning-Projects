@@ -925,22 +925,9 @@ A good contribution should include tests where appropriate and preserve the exis
 
 Add the project's chosen license here.
 
-For example:
-
-```
-MIT License
-```
-
----
-
-\<div align="center"\>
 
 ## ♟️ Built to Learn Chess. Engineered to Scale.
 
 **Neural Networks × MCTS × Self-Play × Reinforcement Learning**
 
-\<br/\>
-
 ⭐ Star the repository if you find the project interesting.
-
-\</div\> :::
