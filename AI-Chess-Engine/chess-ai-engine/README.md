@@ -4,15 +4,11 @@
 
 **A full-stack chess AI combining PyTorch, neural-network evaluation, PUCT Monte Carlo Tree Search, self-play reinforcement learning, FastAPI, and a React/TypeScript interface.**
 
-\<br/\>
 
 !Python !PyTorch !FastAPI !React !TypeScript !Vite
 
-\<br/\>
 
 **🚀 Quick Start** · **🧠 Architecture** · **🎯 Training** · **🔌 API** · **🖥️ Frontend** · **🗺️ Roadmap**
-
-\</div\>
 
 ---
 
