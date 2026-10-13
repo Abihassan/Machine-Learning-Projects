@@ -1,115 +1,50 @@
 ML-Ops CI/CD Engine
 
-Automated machine learning training, evaluation, and model versioning triggered by Git commits.
-
-The ML-Ops CI/CD Engine automates the machine learning lifecycle by connecting Git-based workflows with model training, evaluation, checkpointing, and a live monitoring dashboard.
-
-When a commit modifies files in watched directories such as data/ or src/models/, the engine detects the change, triggers a training or fine-tuning pipeline, evaluates the model with a precision-focused evaluation strategy, and saves a new checkpoint only when the model meets the configured performance criteria.
-
-✨ Features
-Git-triggered automation — Trigger ML pipelines through GitHub or GitLab push webhooks.
-Automated model training — Train or fine-tune models when relevant data or model code changes.
-Precision-focused evaluation — Evaluate models using precision, recall, and F1-score.
-Performance-based checkpointing — Save a model only when it improves on the current best and satisfies the configured precision threshold.
-Live dashboard — Monitor pipeline execution and run statuses through a React-based interface.
-Configurable training — Customize model architecture, training parameters, and evaluation thresholds using YAML.
-Flexible database support — Use SQLite for local development or PostgreSQL for production deployments.
-Demo-ready setup — Explore the pipeline using sample webhook payloads and synthetic data without requiring a real Git repository.
-🏗️ Architecture
-GitHub / GitLab
-       |
-       | Push Webhook
-       v
- FastAPI Backend
-       |
-       v
- Change Detection
-       |
-       | Watched paths modified?
-       v
- Pipeline Orchestrator
-       |
-       +----> Model Loading
-       |
-       +----> Training / Fine-tuning
-       |
-       +----> Model Evaluation
-       |
-       +----> Best Model Checkpointing
-       |
-       v
- Database (SQLite / PostgreSQL)
-       |
-       v
- React Dashboard
+An automated machine learning CI/CD pipeline that triggers model training and evaluation whenever relevant Git changes are detected. The engine trains or fine-tunes models, evaluates performance using precision-focused metrics, saves improved model checkpoints, and provides a live dashboard for monitoring pipeline execution.
 
 Project Structure
-ML-Ops-CI-CD-Engine/
-├── backend/
-│   ├── app/
-│   │   ├── main.py
-│   │   └── ml/
-│   │       ├── model_manager.py
-│   │       ├── training.py
-│   │       ├── evaluation.py
-│   │       └── pipeline_orchestrator.py
-│   ├── mock_data/
-│   │   ├── sample_git_payload.json
-│   │   ├── config.yaml
-│   │   └── ...
-│   ├── requirements.txt
-│   └── ...
-├── frontend/
-│   ├── src/
-│   ├── package.json
-│   └── ...
-└── README.md
+backend/    FastAPI application, webhook listener, and ML pipeline
+frontend/   React, TypeScript, and Tailwind CSS dashboard
 
-backend/ — FastAPI application, Git webhook handling, ML pipeline orchestration, and database integration.
-frontend/ — React, TypeScript, and Tailwind CSS dashboard.
-backend/mock_data/ — Sample webhook payloads, configuration, and synthetic data for local testing.
-🛠️ Tech Stack
-Component	Technology
-Backend API	Python, FastAPI
-ML Framework	PyTorch
-Pretrained Models	Hugging Face Transformers
-Frontend	React, TypeScript
-Styling	Tailwind CSS
-Database	SQLite / PostgreSQL
-Development Server	Uvicorn
-Configuration	YAML
-Integration	GitHub / GitLab webhooks
-🚀 Getting Started
+Features
+Git-triggered model training through GitHub and GitLab webhooks.
+Automatic detection of changes to data/ and src/models/.
+Configurable model training and fine-tuning.
+Model evaluation using precision, recall, and F1-score.
+Performance-based model checkpointing.
+Live dashboard for monitoring pipeline runs.
+YAML-based model and training configuration.
+SQLite support for development and PostgreSQL support for production.
+Sample webhook payloads and synthetic data for testing.
 Prerequisites
-
-Install the following before running the project:
-
-Python 3.10 or later
-Node.js 18 or later
+Python 3.10+
+Node.js 18+
 npm
 Git
 
-Optional: GPU-compatible PyTorch and the required ML dependencies for running actual model training workloads.
+PyTorch and Hugging Face Transformers are required for the corresponding ML workloads. These libraries can be resource-intensive, so install them in an environment with suitable CPU or GPU resources.
 
+The API and dashboard can operate without the full ML dependencies when the active code paths do not require them.
+
+Installation and Setup
 1. Clone the Repository
 git clone <YOUR_REPOSITORY_URL>
 cd ML-Ops-CI-CD-Engine
 
 
-Replace <YOUR_REPOSITORY_URL> with your repository's clone URL.
+Replace <YOUR_REPOSITORY_URL> with your repository URL.
 
-2. Start the Backend
+2. Run the Backend
 
 Navigate to the backend directory and create a virtual environment:
 
 cd backend
-
 python3 -m venv .venv
 
 
 Activate the environment.
 
-Linux / macOS:
+Linux/macOS:
 
 source .venv/bin/activate
 
@@ -119,30 +54,28 @@ Windows PowerShell:
 .venv\Scripts\Activate.ps1
 
 
-Install the backend dependencies:
+Install dependencies:
 
 pip install -r requirements.txt
 
 
-Start the FastAPI development server:
+Start the FastAPI server:
 
 uvicorn app.main:app --reload --port 8000
 
 
 The backend will be available at:
 
-API base URL: http://localhost:8000
-Interactive API documentation: http://localhost:8000/docs
+API: http://localhost:8000
+API documentation: http://localhost:8000/docs
 
-On its first launch, the application creates an SQLite database named mlops.db and seeds sample pipeline runs so the dashboard has data to display.
+On the first launch, the application creates an SQLite database named mlops.db and seeds sample pipeline runs for the dashboard.
 
-Note: PyTorch and Hugging Face Transformers can require substantial disk space, memory, and compute resources. Install and configure the appropriate dependencies for your environment if you intend to execute real training workloads. API and dashboard functionality can be used without the full ML stack, provided the relevant imports are not required by the running code path.
-3. Start the Frontend
+3. Run the Frontend
 
-Open a second terminal and navigate to the frontend directory:
+Open a new terminal and navigate to the frontend directory:
 
 cd frontend
-
 npm install
 npm run dev
 
@@ -151,78 +84,55 @@ The dashboard will be available at:
 
 http://localhost:5173
 
-Keep both the backend and frontend servers running while testing the application.
+Keep both the backend and frontend servers running during development.
 
-⚡ Trigger a Pipeline Run
+Trigger a Pipeline Run
 
-You can test the complete webhook workflow without connecting a real Git repository.
+You can test the pipeline using the provided sample Git webhook payload.
 
-From the project root, run:
+Run the following command from the project root:
 
 curl -X POST http://localhost:8000/api/webhooks/git \
   -H "Content-Type: application/json" \
   -d @backend/mock_data/sample_git_payload.json
 
 
-The sample payload includes a commit that modifies:
+The sample payload includes a commit that modifies data/transactions_q3.csv. Because this file matches a watched path, the webhook should trigger a pipeline run.
 
-data/transactions_q3.csv
+The expected workflow is:
 
+The backend receives the Git webhook.
+The engine checks whether the commit modifies a watched path.
+A pipeline run is queued.
+The model is trained or fine-tuned.
+The model is evaluated against the configured criteria.
+The engine decides whether to save a new checkpoint.
+The dashboard displays the run status.
 
-Because this file matches a watched path, the backend should enqueue a pipeline run.
+Open http://localhost:5173 to monitor the pipeline.
 
-Expected Workflow
-Git Push
-   |
-   v
-Webhook Received
-   |
-   v
-Watched Changes Detected
-   |
-   v
-Run Queued
-   |
-   v
-Model Training
-   |
-   v
-Model Evaluation
-   |
-   v
-Checkpoint Decision
-   |
-   v
-Run Completed
-
-
-Open the dashboard at http://localhost:5173 to monitor the run and inspect its status.
-
-A successful run should progress through states such as Queued → Running → Success, depending on the pipeline's execution and error-handling behavior.
-
-🔗 Integrate with GitHub or GitLab
+Integrate with GitHub or GitLab
 
 To trigger the pipeline from a real repository:
 
-Deploy the backend to an endpoint accessible by your Git hosting provider.
-Configure a push webhook in your repository settings.
-Set the webhook URL to:
-   https://<YOUR_BACKEND_HOST>/api/webhooks/git
-
+Deploy the backend to a publicly accessible server.
+Configure a push webhook in your GitHub or GitLab repository settings.
+Set the webhook URL to https://<YOUR_BACKEND_HOST>/api/webhooks/git.
 Configure the webhook to send push events.
-Ensure the repository's watched paths and config.yaml are configured correctly.
+Ensure the watched paths and config.yaml are configured correctly.
 Push a commit that modifies a watched file.
-Open the dashboard to monitor the resulting pipeline run.
+Monitor the pipeline from the dashboard.
 
-Production note: Configure webhook signature verification, authentication, HTTPS, and appropriate access controls before exposing the endpoint publicly.
+For production deployments, configure HTTPS, webhook signature verification, authentication, and appropriate access controls.
 
-⚙️ Configuration
+Configuration
 
-The pipeline can be configured using a config.yaml file at the root of the repository being watched.
+The engine supports a config.yaml file at the root of the watched repository. This file controls the model source, training parameters, and evaluation criteria.
 
-See backend/mock_data/config.yaml for the project's reference configuration.
+See backend/mock_data/config.yaml for the reference configuration.
 
-Example Configuration
+Example:
+
 model:
   source: local
   architecture: CustomCNN
@@ -237,173 +147,131 @@ training:
 evaluation:
   precision_threshold: 0.85
 
-Configuration Reference
+Configuration Parameters
 Parameter	Description
 model.source	Model source: local or huggingface.
-model.architecture	Name of the local model architecture to load.
-model.hf_model_id	Hugging Face model identifier when using a pretrained model.
+model.architecture	Local PyTorch model architecture.
+model.hf_model_id	Hugging Face pretrained model identifier.
 training.epochs	Number of training epochs.
-training.batch_size	Number of samples processed per batch.
+training.batch_size	Number of samples per batch.
 training.learning_rate	Optimizer learning rate.
-training.val_split	Fraction of the dataset reserved for validation.
-evaluation.precision_threshold	Minimum precision required for a checkpoint to be accepted.
+training.val_split	Fraction of data reserved for validation.
+evaluation.precision_threshold	Minimum precision required for checkpoint acceptance.
 
-The configuration values shown above are examples. Ensure that the selected architecture, dataset, tokenizer, and training parameters are compatible with your actual ML task.
+Ensure the selected model, dataset, and training parameters are compatible with your ML task.
 
-🧠 Machine Learning Pipeline
-
-The ML components are organized into focused modules.
-
-Model Management
+Machine Learning Pipeline
+Model Manager
 
 File: backend/app/ml/model_manager.py
 
-Responsible for resolving the model configuration and loading the appropriate model.
+Resolves the model configuration and loads the appropriate model. It supports local PyTorch architectures and Hugging Face pretrained models with their corresponding tokenizers.
 
-Supports local PyTorch model architectures.
-Supports Hugging Face pretrained models and tokenizers.
-Uses the configured model source and architecture settings.
-Model Training
+Training
 
 File: backend/app/ml/training.py
 
-Handles the model training loop and associated training configuration, including epochs, batch size, and learning rate.
+Implements the model training loop and manages training parameters such as epochs, batch size, and learning rate.
 
-The project includes a minimal tabular demo to help demonstrate the pipeline. Replace or extend its data-loading logic, preprocessing, and model forward pass to support your production dataset and architecture.
+The project includes a minimal tabular demo. Replace or extend the demo data loaders, preprocessing logic, and model forward pass to support your production workload.
 
-Model Evaluation
+Evaluation
 
 File: backend/app/ml/evaluation.py
 
-Evaluates model performance using classification metrics, including:
+Evaluates model performance using:
 
-Precision — The proportion of positive predictions that are correct.
-Recall — The proportion of actual positive cases that are correctly identified.
-F1-score — The harmonic mean of precision and recall.
+Precision
+Recall
+F1-score
 
-The configured precision threshold determines the minimum precision required for a model checkpoint to be considered.
+These metrics help assess the model's predictive performance and suitability for the target task.
 
-Pipeline Orchestration
+Pipeline Orchestrator
 
 File: backend/app/ml/pipeline_orchestrator.py
 
-Coordinates the pipeline from model loading through training and evaluation to the final checkpoint decision.
+Coordinates the complete pipeline, including model loading, training, evaluation, and checkpoint selection.
 
-A model is checkpointed only when both conditions are satisfied:
+A model is saved as the new best checkpoint only when both conditions are met:
 
 Its precision exceeds the current best model's precision.
 Its precision meets or exceeds the configured precision_threshold.
 
-This helps prevent a lower-performing model from replacing the best saved model.
+This prevents a model from replacing the current best checkpoint unless it satisfies the configured acceptance criteria.
 
-Important: Precision alone may not be sufficient for selecting a production model. Depending on the use case, also consider recall, F1-score, class imbalance, validation methodology, and the consequences of false positives and false negatives.
-🗄️ Database Configuration
+Database
 
-The project uses SQLite by default for local development.
+The application uses SQLite by default and creates mlops.db automatically.
 
-The database is created automatically on startup:
-
-mlops.db
-
-
-For production deployments, configure the DATABASE_URL environment variable with a PostgreSQL connection string.
-
-Example:
+For production, configure the DATABASE_URL environment variable with a PostgreSQL connection string:
 
 export DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DATABASE"
 
 
-Replace the placeholders with your database credentials and connection details.
+Replace the placeholders with your database credentials and connection details. Ensure the required database driver is installed and the connection settings are configured correctly.
 
-The application is designed to support changing the database URL without requiring unrelated application code changes. Ensure the PostgreSQL driver and connection settings are configured appropriately for your environment.
+Demo Data
 
-🖥️ Dashboard
+The backend/mock_data/ directory contains sample assets for testing the pipeline:
 
-The React dashboard provides a visual interface for monitoring pipeline execution.
-
-Use it to observe pipeline runs and their statuses as webhook-triggered workflows progress.
-
-View existing demo runs.
-Monitor queued, running, and completed runs.
-Follow model training and evaluation activity exposed by the backend.
-
-Dashboard details depend on the API endpoints and fields implemented in the current project version.
-
-🧪 Demo Data
-
-The backend/mock_data/ directory contains sample assets for testing:
-
-sample_git_payload.json — A mock Git push event.
+sample_git_payload.json — Sample Git push webhook payload.
 config.yaml — Example model and training configuration.
-Synthetic dataset files — Sample data for exercising the demo pipeline.
+Synthetic dataset files — Sample data for demonstrating the pipeline.
 
-These assets let you explore the end-to-end workflow without connecting an external repository or supplying a production dataset.
+These files allow you to test the workflow without connecting a real Git repository or using a production dataset.
 
-🔧 Troubleshooting
+Troubleshooting
 Backend fails to start
 Verify that Python 3.10 or later is installed.
-Activate the backend virtual environment.
-Install the dependencies from requirements.txt.
-Check the terminal output for missing packages or configuration errors.
-Frontend cannot connect to the backend
-Confirm that the backend is running on port 8000.
-Confirm that the frontend is running on port 5173.
-Check the frontend API base URL and backend CORS configuration.
-Webhook does not trigger a run
-Verify that the request reaches /api/webhooks/git.
-Check that the payload follows the expected Git webhook format.
-Confirm that the commit modifies a watched path, such as data/ or src/models/.
-Inspect the backend logs for validation errors or pipeline scheduling issues.
+Ensure the virtual environment is activated.
+Install all required dependencies.
+Review the backend logs for errors.
+Webhook does not trigger a pipeline
+Confirm that the backend is running.
+Verify the webhook endpoint and request payload.
+Ensure the commit modifies a watched path, such as data/ or src/models/.
+Check the backend logs for validation or scheduling errors.
 Model training fails
 Verify that the required ML dependencies are installed.
-Check that the selected model architecture matches the dataset and input format.
-Confirm that the dataset and configuration are accessible to the pipeline.
-Review the backend logs for training or evaluation errors.
-A trained model is not checkpointed
+Check the dataset format and model configuration.
+Ensure the selected architecture supports the input data.
+Review the training logs for errors.
+Model checkpoint is not updated
 
-Check whether the evaluated model:
+The model must outperform the current best model in precision and meet the configured precision threshold. If either condition fails, the existing best checkpoint is retained.
 
-Achieved precision above the current best model's precision.
-Met the configured evaluation.precision_threshold.
+Production Considerations
 
-A model that fails either condition should not replace the current best checkpoint.
+Before deploying the engine in production, consider implementing or verifying:
 
-🔒 Production Considerations
-
-Before deploying the engine in a production environment, consider implementing or verifying:
-
-Webhook signature validation and authentication.
-Secure secret and environment-variable management.
-Background task execution or a dedicated job queue for long-running training.
-GPU resource management and training timeouts.
-Dataset and model artifact versioning.
-Persistent artifact storage and backup strategies.
-Database migrations and production connection pooling.
+Webhook authentication and signature validation.
+Secure management of secrets and environment variables.
+Background workers or a dedicated job queue for long-running training.
+GPU resource management and execution timeouts.
+Model artifact storage and versioning.
+Database migrations and backup strategies.
 Structured logging, monitoring, and failure notifications.
 Automated tests for webhook handling, training, evaluation, and checkpoint selection.
-Reproducible training runs with recorded dataset, configuration, and model versions.
 
-The demo pipeline is a starting point. Production readiness depends on the actual data loaders, model implementations, job execution model, and deployment configuration.
+The included pipeline is a demonstration framework. Production workloads may require custom data loaders, model implementations, execution infrastructure, and deployment configuration.
 
-🛣️ Future Enhancements
-
-Potential extensions include:
-
-Experiment tracking and run comparisons.
-Model registry and artifact version management.
-Configurable evaluation metrics and acceptance policies.
+Future Enhancements
+Experiment tracking and model comparison.
+Model registry and artifact versioning.
+Configurable evaluation metrics.
 Distributed training and GPU scheduling.
-Automated rollback to previously validated checkpoints.
-CI test integration for data and model changes.
-Notifications for failed runs and improved model performance.
-🤝 Contributing
+Automated rollback to previous checkpoints.
+Pipeline failure notifications.
+Integration with automated testing and deployment workflows.
+Contributing
 
 Contributions, bug reports, and feature suggestions are welcome.
 
 Fork the repository.
 Create a feature branch.
-Make your changes and add relevant tests.
-Submit a pull request describing the changes.
-📄 License
+Implement and test your changes.
+Submit a pull request describing your changes.
+License
 
-Add your project's license information here. If the repository is open source, include the appropriate LICENSE file and update this section accordingly.
+Add the appropriate license information for your project and include a LICENSE file in the repository.
